@@ -1,19 +1,24 @@
 {
-  "name": "semver-from-git-commits",
-  "version": "1.0.0",
-  "description": "Generate a new SEMVER based on last git semver tag",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/rberger/semver-from-git-commits.git"
-  },
-  "author": "Robert J. Berger",
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/rberger/semver-from-git-commits/issues"
-  },
-  "homepage": "https://github.com/rberger/semver-from-git-commits#readme"
+    "name": "semver-from-git",
+    "version": "0.1.0",
+    "description": "Generate a new SEMVER based on last git semver tag",
+    "main": "index.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "semver-from-git": "bin/semver-from-git"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/omnypay/semver-from-git.git"
+    },
+    "author": "Robert J. Berger",
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/omnypay/semver-from-git/issues"
+    },
+    "homepage": "https://github.com/omnypay/semver-from-git#readme",
+    "dependencies": {
+        "git-latest-semver-tag": "^1.0.2",
+        "lumo-cljs": "1.6.0"
+    }
 }

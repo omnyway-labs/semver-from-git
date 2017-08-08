@@ -1,15 +1,20 @@
-(defproject semver-from-git-commits "0.1.0-SNAPSHOT"
-  :description "FIXME: write this!"
+;; This project file is only needed to
+;; download (andare)[https://github.com/mfikes/andare] into your local maven
+;; repo (usually ~/.m2) as a dependency
+;;
+;; Its not used by lumo or the program
+;;
+(defproject semver-from-git "0.1.0-SNAPSHOT"
+  :description "Generate next semver based on git tags"
   :url "http://example.com/FIXME"
-  :license {:name "Eclipse Public License"
-            :url "http://www.eclipse.org/legal/epl-v10.html"}
+  :license {:name "The MIT License"
+            :url "https://opensource.org/licenses/MIT"}
 
   :min-lein-version "2.7.1"
 
   :dependencies [[org.clojure/clojure "1.8.0"]
                  [org.clojure/clojurescript "1.9.854"]
-                 [org.clojure/core.async  "0.3.443"
-                  :exclusions [org.clojure/tools.reader]]]
+                 [andare "0.7.0"]] ;; core.async tuned for bootstrapped clojurescript
 
   :plugins [[lein-figwheel "0.5.12"]
             [lein-cljsbuild "1.1.7" :exclusions [[org.clojure/clojure]]]]
@@ -23,14 +28,14 @@
                 ;; The presence of a :figwheel configuration here
                 ;; will cause figwheel to inject the figwheel client
                 ;; into your build
-                :figwheel {:on-jsload "semver-from-git-commits.core/on-js-reload"
+                :figwheel {:on-jsload "semver-from-git.core/on-js-reload"
                            ;; :open-urls will pop open your application
                            ;; in the default browser once Figwheel has
                            ;; started and compiled your application.
                            ;; Comment this out once it no longer serves you.
                            :open-urls ["http://localhost:3449/index.html"]}
 
-                :compiler {:main semver-from-git-commits.core
+                :compiler {:main semver-from-git.core
                            :asset-path "js/compiled/out"
                            :output-to "resources/public/js/compiled/semver_from_git_commits.js"
                            :output-dir "resources/public/js/compiled/out"
@@ -44,7 +49,7 @@
                {:id "min"
                 :source-paths ["src"]
                 :compiler {:output-to "resources/public/js/compiled/semver_from_git_commits.js"
-                           :main semver-from-git-commits.core
+                           :main semver-from-git.core
                            :optimizations :advanced
                            :pretty-print false}}]}
 
