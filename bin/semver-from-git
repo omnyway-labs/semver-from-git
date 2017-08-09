@@ -1,6 +1,6 @@
 #!/bin/bash
 
-export SEMVER-FROM-GIT_HOME="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )/.."
+export SEMVER_FROM_GIT_HOME="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )/.."
 
-$SEMVER-FROM-GIT_HOME/node_modules/lumo-cljs/bin/lumo -K -D andare:0.7.0 -c src -m semver-from-git.core
+$SEMVER_FROM_GIT_HOME/node_modules/lumo-cljs/bin/lumo -K -D andare:0.7.0 -c src -m semver-from-git.core
 
