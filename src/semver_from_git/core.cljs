@@ -32,11 +32,10 @@
 (def git-empty-tree "4b825dc642cb6eb9a060e54bf8d69288fbee4904")
 
 (def git-latest (js/require "git-latest-semver-tag"))
-(def git-latest-res-chan (async/chan))
 
 (def child_process (js/require "child_process"))
 
-(defn sh
+(defn sh-simple
   "Function to to run programs thru the shell"
   [args]
   (let [result (.spawnSync child_process
@@ -46,38 +45,45 @@
 
     (when-not (= 0 (.-status result))
       (do (println (.toString (.-stderr result) "utf8"))
-          (throw (js/Error. (str "Error whilst performing shell command.")))))
-
+          (throw (js/Error. (str "Error whilst performing shell command: " args)))))
     (str/trim (str (.-stdout result)))))
 
+(defn sh
+  "Function to to run programs thru the shell
+  Returns map with error status, stdout and stderr"
+  [args]
+  (let [result (.spawnSync child_process
+                           (first args)
+                           (clj->js (rest args))
+                           #js {"shell" true})]
+
+    {:error (if (= 0 (.-status result))false true)
+     :stdout (str/trim (str (.-stdout result)))
+     :stderr (str/trim (str (.-stderr result)))}))
+
 (defn latest-semver-tag
-  "Use the git-latest-semver-tag npm library to get the latest semver style tag
-  of the current repo Its asynchronous so a callback is used to get the resutls.
-  This uses core.async to get the results back into the main program"
+  "Get the latest (largest) semver of a git repo"
   []
-  (git-latest (fn [err,tag] (async-macros/go (async/>! git-latest-res-chan tag)))))
+  (.stdout (sh "git tag --sort=v:refname |sed -n 's/^\\([0-9]*\\.[0-9]*\\.[0-9]*\\).*/\\1/p' | tail -1")))
 
 (defn latest-major-minor []
-  (sh "git describe --tags --match RELEASE-\\*"))
-
-(defn latest-semver-tag []
-  (async-macros/go
-    (async/<! git-latest-res-chan)))
+  (if-let [match (re-matches #"Release-(\d+)\.(\d+)" (:stdout (sh "git describe --tags --match RELEASE-\\*")))]
+      {:major (second match) :minor (nth match 3)}))
 
 (defn git-distance
   ([earlier] (git-distance earlier "HEAD"))
   ([earlier later]
-   (sh (str "git rev-list " earlier ".." later " --count"))))
+   (:stdout (sh (str "git rev-list " earlier ".." later " --count")))))
 
-;; (defn new-semver []
-;;   (async/go
-;;     (let [latest-tag (if (empty? (latest-semver-tag)) git-empty-tree)
-;;           distance  (git-distance latest-tag)]
-
-;;       )))
+(defn new-semver []
+    (let [initial-latest-tag (if (empty? (latest-semver-tag)) git-empty-tree)
+          increment  (if (> 0 (git-distance initial-latest-tag)) 1 0)]
+      (if-let [match ((re-matches #"(\d+\.)(\d+)\.(\d+)" initial-latest-tag))]
+        (str (nth  match 1) "." (nth match 2) "." (+ increment (nth match 3)))
+        "0.0.0")))
 
 (defn -main []
-  (println "YAY: " (sh ["git describe --tags --match RELEASE-\\*"])))
+  (new-semver)
 
 
 ;;  (.exec shell "ls"))
