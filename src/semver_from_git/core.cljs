@@ -1,8 +1,6 @@
 (ns semver-from-git.core
-  (:require [cljs.core.async :as async]
-            [clojure.string :as str]
-            [clojure.pprint :as pp])
-  (:require-macros [cljs.core.async.macros :as async-macros]))
+  (:require [clojure.string :as str]
+            [clojure.pprint :as pp]))
 
 (enable-console-print!)
 
@@ -35,24 +33,14 @@
 
 (def child_process (js/require "child_process"))
 
-(defn sh-simple
-  "Function to to run programs thru the shell"
-  [args]
-  (let [result (.spawnSync child_process
-                           (first args)
-                           (clj->js (rest args))
-                           #js {"shell" true})]
-
-    (when-not (= 0 (.-status result))
-      (do (println (.toString (.-stderr result) "utf8"))
-          (throw (js/Error. (str "Error whilst performing shell command: " args)))))
-    (str/trim (str (.-stdout result)))))
-
 (defn sh
   "Function to to run programs thru the shell
   Returns map with error status, stdout and stderr"
-  [args]
-  (let [result (.spawnSync child_process
+  [cmdline]
+;;  (println "sh cmdline: " cmdline "\n")
+  (let [args (str/split cmdline #" ")
+        ;; _ (println "args: " args)
+        result (.spawnSync child_process
                            (first args)
                            (clj->js (rest args))
                            #js {"shell" true})]
@@ -67,30 +55,47 @@
   (:stdout (sh "git tag --sort=v:refname |sed -n 's/^\\([0-9]*\\.[0-9]*\\.[0-9]*\\).*/\\1/p' | tail -1")))
 
 (defn latest-major-minor []
-  (if-let [match (re-matches #"Release-(\d+)\.(\d+)" (:stdout (sh "git describe --tags --match RELEASE-\\*")))]
-      {:major (second match) :minor (nth match 3)}))
+  (let [result (:stdout (sh "git describe --tags --match RELEASE-\\*"))
+        _ (println "result: " result)
+        match (re-matches #"RELEASE-(\d+)\.(\d+).*" result)]
+    (println "match: " match)
+    ;; (println "match: " match " second match: " (nth match 2) " 3rd match: " ((nth match 3)))
+    {:release-major (js/parseInt (nth match 1)) :release-minor (js/parseInt (nth match 2))}))
+
 
 (defn git-distance
   ([earlier] (git-distance earlier "HEAD"))
   ([earlier later]
-   (:stdout (sh (str "git rev-list " earlier ".." later " --count")))))
+   (let [result (sh (str "git rev-list " earlier ".." later " --count"))
+         stdout (:stdout result)]
+     stdout)))
+;;   (:stdout (sh (str "git rev-list " earlier ".." later " --count")))))
 
 (defn new-semver []
-    (let [initial-latest-tag (if (empty? (latest-semver-tag)) git-empty-tree)
-          _ (println "initial-latest-tag: " initial-latest-tag)
-          increment  (if (> 0 (git-distance initial-latest-tag)) 1 0)
-          _ (println "increment: " increment)]
+  (let [latest-tag (latest-semver-tag)
+        _ (println "latest-tag: " latest-tag)
+        initial-latest-tag (if (empty? latest-tag) git-empty-tree latest-tag)
+        _ (println "initial-latest-tag: " initial-latest-tag)
+        distance (git-distance initial-latest-tag)
+        _ (println "distance: " distance)
+        increment  (if (> distance 0) 1 0)
+        _ (println "increment: " increment)]
 
-      (if-let [match (re-matches #"(\d+\.)(\d+)\.(\d+)" initial-latest-tag)]
-        (println "match: " match " if-let true result: " (str (nth  match 1) "." (nth match 2) "." (+ increment (nth match 3))))
-        "0.0.0")))
+    ;; TODO: need to reset patch if RELEASE-x.y triggers a change in major or minor
+    (if-let [match (re-matches #"(\d+)\.(\d+)\.(\d+)" initial-latest-tag)]
+      (let [{:keys [release-major release-minor]} (latest-major-minor)
+            _ (println "latest-major-minor: " (latest-major-minor))
+            _ (println "release-major: " release-major " release-minor: " release-minor)
+            major (max release-major (js/parseInt (nth  match 1)))
+            _ (println "major: " major)
+            minor (max release-minor (js/parseInt (nth match 2)))
+            _ (println "minor: " minor)
+            initial-patch (js/parseInt (nth match 3))
+            _ (println "initial-patch: " initial-patch)
+            final-patch (+ increment initial-patch)
+            _ (println "final-patch: " final-patch)]
+        (str major "." minor "." final-patch))
+      "0.0.0")))
 
 (defn -main []
   (println "new-semver result: " (new-semver)))
-
-
-;;  (.exec shell "ls"))
-  ;;  (println "latest-major-minor: " (latest-major-minor)))
-;;  (async-macros/go
-;;  (println "FOO: " (latest-semver-tag)))
-;;   (println "Git-Latest RESULTS: " (async/<! git-latest-res-chan))))
