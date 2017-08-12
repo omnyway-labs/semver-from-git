@@ -37,9 +37,7 @@
   "Function to to run programs thru the shell
   Returns map with error status, stdout and stderr"
   [cmdline]
-;;  (println "sh cmdline: " cmdline "\n")
   (let [args (str/split cmdline #" ")
-        ;; _ (println "args: " args)
         result (.spawnSync child_process
                            (first args)
                            (clj->js (rest args))
@@ -56,9 +54,7 @@
 
 (defn last-release []
   (let [result (:stdout (sh "git describe --tags --match RELEASE-\\*"))
-        _ (println "result: " result)
         match (re-matches #"RELEASE-(\d+)\.(\d+).*" result)]
-    (println "match: " match)
     (if match
       {:release-major (js/parseInt (nth match 1)) :release-minor (js/parseInt (nth match 2))}
       {:release-major 0 :release-minor 0})))
@@ -78,39 +74,27 @@
   Return a map of major, minor and patch with patch potentially updated"
   [latest-tag]
   (let [earlier-commit (if (empty? latest-tag) git-empty-tree latest-tag)
-        _ (println "earlier-commit: " earlier-commit)
         distance (git-distance earlier-commit)
-        _ (println "distance: " distance)
         increment  (if (> distance 0) 1 0)
-        _ (println "increment: " increment)]
     (if-let [match (re-matches #"(\d+)\.(\d+)\.(\d+)" earlier-commit)]
       (let [major (js/parseInt (nth  match 1))
-            _ (println "major: " major)
             minor (js/parseInt (nth match 2))
-            _ (println "minor: " minor)
             patch (+ increment (js/parseInt (nth match 3)))
-            _ (println "patch: " patch)
             new-tag {:major major :minor minor :patch patch}
-            _ (println "new-tag: " new-tag)]
         new-tag)
       {:major 0 :minor 0 :patch 0})))
 
 (defn final-semver-tag [{:keys [major minor patch]}
                         {:keys [release-major release-minor]}]
-  (let [_ (println "major: " major " minor: " minor " patch: " patch " release-major: " release-major " release-minor: " release-minor)
-        final-major (max major release-major)
-        _ (println "final-major: " final-major)
+  (let [final-major (max major release-major)
         final-minor (max minor release-minor)
-        _ (println "final-minor: " final-minor)]
     (if (or (> final-major major) (> final-minor minor))
       (str final-major "." final-minor "." "0")
       (str major "." minor "." patch))))
 
 (defn new-semver []
   (let [initial-tag (initial-new-tag (latest-semver-tag))
-        _ (println "initial-tag: " initial-tag)
         final-result (final-semver-tag initial-tag (last-release))
-        _ (println "final-result: " final-result)]
     final-result))
 
 
