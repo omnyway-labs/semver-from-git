@@ -53,6 +53,7 @@
   (:stdout (sh "git tag --sort=v:refname |sed -n 's/^\\([0-9]*\\.[0-9]*\\.[0-9]*\\).*/\\1/p' | tail -1")))
 
 (defn last-release
+  "Get the most resent RELEASE-major.minor specification tag"
   []
   (let [result (:stdout (sh "git describe --tags --match RELEASE-\\*"))
         match (re-matches #"RELEASE-(\d+)\.(\d+).*" result)]
