@@ -24,14 +24,12 @@
 ;; Print the value of new-tag
 ;; Write new-tag to version-file
 
+(def child_process (js/require "child_process"))
+
 ;; The id of the "empty tree" in Git and it's always available in every repository.
 ; This could change if git ever stopped using sha1
 ;; See https://stackoverflow.com/a/40884093/38841
 (def git-empty-tree "4b825dc642cb6eb9a060e54bf8d69288fbee4904")
-
-(def git-latest (js/require "git-latest-semver-tag"))
-
-(def child_process (js/require "child_process"))
 
 (defn sh
   "Function to to run programs thru the shell
