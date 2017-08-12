@@ -52,7 +52,9 @@
   []
   (:stdout (sh "git tag --sort=v:refname |sed -n 's/^\\([0-9]*\\.[0-9]*\\.[0-9]*\\).*/\\1/p' | tail -1")))
 
-(defn last-release []
+(defn last-release
+  ""
+  []
   (let [result (:stdout (sh "git describe --tags --match RELEASE-\\*"))
         match (re-matches #"RELEASE-(\d+)\.(\d+).*" result)]
     (if match
@@ -75,54 +77,27 @@
   [latest-tag]
   (let [earlier-commit (if (empty? latest-tag) git-empty-tree latest-tag)
         distance (git-distance earlier-commit)
-        increment  (if (> distance 0) 1 0)
+        increment  (if (> distance 0) 1 0)]
     (if-let [match (re-matches #"(\d+)\.(\d+)\.(\d+)" earlier-commit)]
       (let [major (js/parseInt (nth  match 1))
             minor (js/parseInt (nth match 2))
             patch (+ increment (js/parseInt (nth match 3)))
-            new-tag {:major major :minor minor :patch patch}
+            new-tag {:major major :minor minor :patch patch}]
         new-tag)
       {:major 0 :minor 0 :patch 0})))
 
 (defn final-semver-tag [{:keys [major minor patch]}
                         {:keys [release-major release-minor]}]
   (let [final-major (max major release-major)
-        final-minor (max minor release-minor)
+        final-minor (max minor release-minor)]
     (if (or (> final-major major) (> final-minor minor))
       (str final-major "." final-minor "." "0")
       (str major "." minor "." patch))))
 
 (defn new-semver []
   (let [initial-tag (initial-new-tag (latest-semver-tag))
-        final-result (final-semver-tag initial-tag (last-release))
+        final-result (final-semver-tag initial-tag (last-release))]
     final-result))
 
-
-;; (defn new-semver []
-;;   (let [latest-tag (latest-semver-tag)
-;;         _ (println "latest-tag: " latest-tag)
-;;         initial-latest-tag (if (empty? latest-tag) git-empty-tree latest-tag)
-;;         _ (println "initial-latest-tag: " initial-latest-tag)
-;;         distance (git-distance initial-latest-tag)
-;;         _ (println "distance: " distance)
-;;         increment  (if (> distance 0) 1 0)
-;;         _ (println "increment: " increment)]
-
-;;     ;; TODO: need to reset patch if RELEASE-x.y triggers a change in major or minor
-;;     (if-let [match (re-matches #"(\d+)\.(\d+)\.(\d+)" initial-latest-tag)]
-;;       (let [{:keys [release-major release-minor]} (last-release)
-;;             _ (println "last-release: " (last-release))
-;;             _ (println "release-major: " release-major " release-minor: " release-minor)
-;;             major (max release-major (js/parseInt (nth  match 1)))
-;;             _ (println "major: " major)
-;;             minor (max release-minor (js/parseInt (nth match 2)))
-;;             _ (println "minor: " minor)
-;;             initial-patch (js/parseInt (nth match 3))
-;;             _ (println "initial-patch: " initial-patch)
-;;             final-patch (+ increment initial-patch)
-;;             _ (println "final-patch: " final-patch)]
-;;         (str major "." minor "." final-patch))
-;;       "0.0.0")))
-
 (defn -main []
-  (println "new-semver result: " (new-semver)))
+  (println (new-semver)))
