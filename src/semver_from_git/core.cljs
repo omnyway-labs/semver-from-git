@@ -84,7 +84,7 @@
         new-tag)
       {:major 0 :minor 0 :patch 0})))
 
-(defn final-semver-tag [{:keys [major minor patch]}
+(defn final-semver-value [{:keys [major minor patch]}
                         {:keys [release-major release-minor]}]
   (let [final-major (max major release-major)
         final-minor (max minor release-minor)]
@@ -92,9 +92,19 @@
       (str final-major "." final-minor "." "0")
       (str major "." minor "." patch))))
 
+(defn current-branch []
+  (:stdout (sh "git rev-parse --abbrev-ref HEAD")))
+
+(defn check-branch [final-sevmer-value]
+  (let [current-branch (current-branch)]
+    (if (not= "master" current-branch)
+      (str current-branch "-" final-sevmer-value)
+      final-sevmer-value)))
+
 (defn new-semver []
   (let [initial-tag (initial-new-tag (latest-semver-tag))
-        final-result (final-semver-tag initial-tag (last-release))]
+        final-semver-value (final-semver-value initial-tag (last-release))
+        final-result (check-branch final-semver-value)]
     final-result))
 
 (defn -main []
