@@ -18,7 +18,6 @@
     },
     "homepage": "https://github.com/omnypay/semver-from-git#readme",
     "dependencies": {
-        "git-latest-semver-tag": "^1.0.2",
         "lumo-cljs": "1.6.0"
     }
 }

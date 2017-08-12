@@ -14,7 +14,9 @@
 
   :dependencies [[org.clojure/clojure "1.8.0"]
                  [org.clojure/clojurescript "1.9.854"]
-                 [andare "0.7.0"]] ;; core.async tuned for bootstrapped clojurescript
+                 [macchiato/fs "0.1.1"]
+                 ;; [andare "0.7.0"]] ;; core.async tuned for bootstrapped clojurescript
+                 [org.clojure/tools.cli "0.3.5"]]
 
   :plugins [[lein-figwheel "0.5.12"]
             [lein-cljsbuild "1.1.7" :exclusions [[org.clojure/clojure]]]]
