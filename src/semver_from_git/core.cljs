@@ -8,6 +8,9 @@
 
 ;; version-file set to default (VERSION) or to argument if set
 ;;
+;; Do a `git fetch --prune --tags` to insure local repo has same remote tags as remote
+;; Should not disturb any local tags and will not sync local only tags to remote
+;;
 ;; latest-tag = Get the latest semver 
 ;;   If no latest-tag
 ;;     latest-tag = 0.0.0
@@ -31,6 +34,9 @@
 (def cli-options
   [["-h" "--help"]])
 
+;;
+;; Set up for CLI stuff
+;;
 (def default-filename "VERSION")
 
 (defn usage [options-summary]
@@ -73,6 +79,10 @@
   (println msg)
   (js/process.exit status))
 
+;;
+;; Various utility functions
+;;
+
 ;; The id of the "empty tree" in Git and it's always available in every repository.
 ; This could change if git ever stopped using sha1
 ;; See https://stackoverflow.com/a/40884093/38841
@@ -91,6 +101,9 @@
     {:error (if (= 0 (.-status result))false true)
      :stdout (str/trim (str (.-stdout result)))
      :stderr (str/trim (str (.-stderr result)))}))
+
+(defn sync-local-tags-to-remote []
+  (sh "git fetch --prune --tags"))
 
 (defn latest-semver-tag
   "Get the latest (largest) semver of a git repo"
@@ -155,6 +168,7 @@
     final-result))
 
 (defn -main [& args]
+  (sync-local-tags-to-remote)
   (let [{:keys [options filename exit-message ok?]} (validate-args args)
         new-semver (new-semver)]
     (if exit-message
