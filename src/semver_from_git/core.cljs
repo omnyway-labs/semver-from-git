@@ -36,6 +36,8 @@
 
 (def cli-options
   [["-p" "--prefix PREFIX" "Require a prefix before SEMVER"]
+   ["-s" "--sync" "Do a git fetch --prune --tags first"]
+   ["-n" "--no-file" "Only write to stdout. No output file"]
    ["-h" "--help"]])
 
 ;;
@@ -44,17 +46,18 @@
 (def default-filename "VERSION")
 
 (defn usage [options-summary]
-  (->> ["Generate a new semver based incremented from the last git tag that is a semver"
-        ""
-        "Writes the result to stdout and to a file"
-        (str "The default output filename is " default-filename)
-        ""
-        "Usage: semver-from-git [filename]"
-        ""
-        "Options:"
-        options-summary
-        ""]
-       (str/join \newline)))
+  (str/join
+   \newline
+   ["Generate a new semver based incremented from the last git tag that is a semver"
+    ""
+    "Writes the result to stdout and to a file"
+    (str "The default output filename is " default-filename)
+    ""
+    "Usage: semver-from-git [filename]"
+    ""
+    "Options:"
+    options-summary
+    ""]))
 
 (defn error-msg [errors]
   (str "The following errors occurred while parsing your command:\n\n"
@@ -173,14 +176,14 @@
     final-result))
 
 (defn -main [& args]
-  (sync-local-tags-to-remote)
   (let [{:keys [options filename exit-message ok?]} (validate-args args)
         prefix (:prefix options)
         prefix-regex-snippit (if prefix (str prefix "*" ""))
         _ (reset! opts (assoc options :prefix-regex-snippit prefix-regex-snippit))
+        - (if (:sync options) (sync-local-tags-to-remote))
         new-semver (new-semver)]
     (if exit-message
       (exit (if ok? 0 1) exit-message)
       (do
         (println new-semver)
-        (fs/spit filename (str new-semver "\n"))))))
+        (if-not (:no-file options) (fs/spit filename (str new-semver "\n")))))))
