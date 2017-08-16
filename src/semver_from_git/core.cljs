@@ -74,7 +74,7 @@
       ;; custom validation on arguments
       (= 1 (count arguments))
       {:filename (first arguments) :options options}
-      (= 0 (count arguments))
+      (zero? (count arguments))
       {:filename default-filename :options options}
       :else ; failed custom validation => exit with usage summary
       {:exit-message (usage summary)})))
@@ -140,7 +140,7 @@
   [latest-tag]
   (let [earlier-commit (if (empty? latest-tag) git-empty-tree latest-tag)
         distance (git-distance earlier-commit)
-        increment  (if (> distance 0) 1 0)]
+        increment  (if (pos? distance) 1 0)]
     (if-let [match (re-matches #"(\d+)\.(\d+)\.(\d+)" earlier-commit)]
       (let [major (js/parseInt (nth  match 1))
             minor (js/parseInt (nth match 2))
