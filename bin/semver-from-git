@@ -1,5 +1,21 @@
 #!/bin/bash
 
-export SEMVER_FROM_GIT_HOME="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )/.."
+# Path to the called executable
+EXECUTABLE_PATH="${BASH_SOURCE[0]}"
 
-$SEMVER_FROM_GIT_HOME/node_modules/lumo-cljs/bin/lumo -K  -c src:"$SEMVER_FROM_GIT_HOME"/lib/tools.cli-0.3.5.jar:"$SEMVER_FROM_GIT_HOME"/lib/fs-0.1.1.jar -m semver-from-git.core $@
+if [[ $EXECUTABLE_PATH == \/* ]]; # If executable path starts with a slash.
+then
+    # Its installed npm instance is being called
+    NODE_MODULES=`npm root -g`
+    BASE=${NODE_MODULES}/semver-from-git
+    LIB=${BASE}/lib
+    SRC=${BASE}/src
+else
+    # Its being called from within its repo during development
+    BASE="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )/.."
+    NODE_MODULES=${BASE}/node_modules
+    LIB=${BASE}/lib
+    SRC=src
+fi
+
+$BASE/node_modules/lumo-cljs/bin/lumo -K  -c "${SRC}":"$LIB"/tools.cli-0.3.5.jar:"$LIB"/fs-0.1.1.jar -m semver-from-git.core $@
