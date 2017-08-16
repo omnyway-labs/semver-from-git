@@ -1,0 +1,14 @@
+/resources/public/js/compiled/**
+figwheel_server.log
+pom.xml
+/classes/
+/out/
+/target/
+/resources/
+.lein-deps-sum
+.lein-repl-history
+.lein-plugins/
+.repl
+.nrepl-port
+.lumo_cache
+VERSION
