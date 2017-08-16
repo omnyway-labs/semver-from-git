@@ -31,8 +31,12 @@
 
 (def child_process (js/require "child_process"))
 
+;; Atom to store command line options
+(def opts (atom {}))
+
 (def cli-options
-  [["-h" "--help"]])
+  [["-p" "--prefix PREFIX" "Require a prefix before SEMVER"]
+   ["-h" "--help"]])
 
 ;;
 ;; Set up for CLI stuff
@@ -108,7 +112,8 @@
 (defn latest-semver-tag
   "Get the latest (largest) semver of a git repo"
   []
-  (:stdout (sh "git tag --sort=v:refname |sed -n 's/^\\([0-9]*\\.[0-9]*\\.[0-9]*\\).*/\\1/p' | tail -1")))
+  (let [cmd (str "git tag --sort=v:refname |sed -n 's/^" (:prefix-regex-snippit @opts) "\\([0-9]*\\.[0-9]*\\.[0-9]*\\).*/\\1/p' | tail -1")]
+  (:stdout (sh cmd))))
 
 (defn last-release
   "Get the most resent RELEASE-major.minor specification tag"
@@ -170,6 +175,9 @@
 (defn -main [& args]
   (sync-local-tags-to-remote)
   (let [{:keys [options filename exit-message ok?]} (validate-args args)
+        prefix (:prefix options)
+        prefix-regex-snippit (if prefix (str prefix "*" ""))
+        _ (reset! opts (assoc options :prefix-regex-snippit prefix-regex-snippit))
         new-semver (new-semver)]
     (if exit-message
       (exit (if ok? 0 1) exit-message)
