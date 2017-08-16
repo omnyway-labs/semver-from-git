@@ -28,7 +28,7 @@ If you don't want it to write to a file use the `-n` / `--no-file` flags
 semver-from-git -n
 ```
 
-### SEMVER Scenaries
+### SEMVER Scenarios
 
 #### No Previous SEMVER Tag
 
@@ -81,11 +81,63 @@ Options:
   -h, --help
 ```
 
+## Hacking
+
+The program is written in [Clojurescript](https://clojurescript.org) and uses
+[Lumo](https://github.com/anmonteiro/lumo), a standalone ClojureScript
+environment that runs on Node.js and the V8 JavaScript engine.
+
+The main source is in `src/semver_from_git/core.cljs`. A Bash script,
+`bin/semver-from-git`, is used to start it up as a lumo script. The Bash script
+has logic to run within the development environment:
+```
+git clone git@github.com:omnypay/semver-from-git.git
+cd semver-from-git
+npm install
+bin/semver-from-git
+```
+
+Or after it is installed from npmjs.com or other source
+```
+npm install semver-from-git -g
+semver-from-git
+```
+
+### Adding New Clojure/Clojurescript Libraries
+Note that this program expects to have any Clojure/Clojurescript libraries
+installed in `lib/`. They are explicitly specified in the lumo command line in
+`bin/semver-from-git`. Lumo requires that you must use libraries that are
+compatible with bootstrapped clojurescript.
+
+For instance if you want to use `core.async` you must use the
+[andar](https://github.com/mfikes/andare) version.
+
+It is possible to get these dependencies from your local maven repo by adding
+the `-D` to the lumo command line but that will not allow you to package the
+program up into your own npm package.
+
+So you must put all the jars of any Clojure/Clojurescript libraries you want to
+use into `lib/` in the repo. Also recursively any dependencies those libraries
+have. There isn't tooling yet to automate this.
+[Calvin-cljs](https://github.com/eginez/calvin) looks promising to help with
+this. Lumo project may also have something eventually.
+
+### Adding new NPM Libraries
+
+Incorporating npm libraries is basically easy. You follow the normal npm process
+of adding dependencies by doing the following in the top of the repo:
+
+```
+npm install <package> --save
+```
+
+This should update your `package.json` with the new dependency
+
 ## Author
 
 Robert J. Berger @rberger Omnyway Inc.
 
-## License
+## Copyright & License
 
 The MIT License (MIT)
 

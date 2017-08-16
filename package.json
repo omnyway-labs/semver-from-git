@@ -2,7 +2,7 @@
     "name": "semver-from-git",
     "version": "0.1.0",
     "description": "Generate a new SEMVER based on last git semver tag",
-    "main": "index.js",
+    "main": "bin/semver-from-git",
     "directories": {
         "lib": "lib"
     },
